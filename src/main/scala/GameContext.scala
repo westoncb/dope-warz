@@ -17,9 +17,21 @@ sealed trait GameContext {
 }
 
 final case class RegionContext(gameState: GameState) extends GameContext {
-    var regionName = gameState.region.name
+    var region = gameState.region
 
-    override def message: String = s"Welcome to ${regionName}"
+    def drugPrices(region: Region): Map[Drug, Float] = {
+        Map(
+            Speed -> generatePrice(10, 100, region.drugPriceBiases(Speed)),
+            Acid -> generatePrice(50, 300, region.drugPriceBiases(Acid)),
+            Ludes -> generatePrice(2, 50, region.drugPriceBiases(Ludes)),
+            Cocaine -> generatePrice(100, 600, region.drugPriceBiases(Cocaine)),
+            Heroin -> generatePrice(20, 200, region.drugPriceBiases(Heroin)),
+        )
+    }
+
+    def generatePrice(min: Int, max: Int, bias: Float): Int = (Math.random() * bias * (max - min) + min).toInt
+
+    override def message: String = s"Welcome to ${region.name}"
 
     override def actionPrompt: String = "Where would you like to go, dude?"
 
@@ -132,7 +144,7 @@ final case class FightContext(gameState: GameState) extends GameContext {
     override def actions: Seq[Action] = List(exitAction)
 }
 
-final case class StartContext(gameState: GameState) extends GameContext {
+final case class InitialContext(gameState: GameState) extends GameContext {
 
     override def message: String = s"You owe a loan shark ${"$" + gameState.player.debt}.\nAnd you've got 20 days to repay it."
 

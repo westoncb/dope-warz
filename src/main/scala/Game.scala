@@ -17,7 +17,7 @@ case class GameState(player: Player = Player()) {
         fmt.setCalendar(cal)
         fmt.format(cal.getTime)
     }
-    var activeContext: GameContext = StartContext(this)
+    var activeContext: GameContext = InitialContext(this)
 
     def changeRegion(newRegion: Region): Unit = {
         region = newRegion
