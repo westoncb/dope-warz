@@ -24,10 +24,14 @@ final case class RegionContext(gameState: GameState) extends GameContext {
     override def actionPrompt: String = "Where would you like to go, dude?"
 
     override def actions: Seq[Action] = {
-        List(Action.create("Bank", BankContext(gameState)),
-            Action.create("Store", StoreContext(gameState)),
+
+        List(
+            Action.create("Market", MarketContext(gameState)),
+            Action.create("Bank", BankContext(gameState)),
+            Action.create("Gun Store", StoreContext(gameState)),
             Action.create("Travel", TravelContext(gameState)),
-            Action.create("Loan Shark", LoanSharkContext(gameState)))
+            Action.create("Loan Shark", LoanSharkContext(gameState))
+        )
     }
 }
 
@@ -43,14 +47,14 @@ final case class BankContext(gameState: GameState) extends GameContext {
         Right("Deposited successfully")
     })
 
-    val withdrawAction: Action = Action("Deposit", gameState => {
+    val withdrawAction: Action = Action("Withdraw", gameState => {
 
 //        gameState.player.bankMoney -= 5
 //        gameState.player.money += 5
         Right("Deposited successfully")
     })
 
-    val exitAction = Action.create("Exit", RegionContext(gameState))
+    val exitAction = Action.create("Exit Bank", RegionContext(gameState))
 
     override def actions: Seq[Action] = List(depositAction, withdrawAction, exitAction)
 }
@@ -60,7 +64,7 @@ final case class StoreContext(gameState: GameState) extends GameContext {
 
     override def actionPrompt: String = "What would you like to buy?"
 
-    val exitAction = Action.create("Exit", RegionContext(gameState))
+    val exitAction = Action.create("Exit Store", RegionContext(gameState))
 
     override def actions: Seq[Action] = List(exitAction)
 }
@@ -70,7 +74,7 @@ final case class TravelContext(gameState: GameState) extends GameContext {
 
     override def actionPrompt: String = "Where to next?"
 
-    val exitAction = Action.create("Exit", RegionContext(gameState))
+    val exitAction = Action.create("Go Back", RegionContext(gameState))
 
     override def actions: Seq[Action] = List(exitAction)
 }
@@ -86,7 +90,7 @@ final case class LoanSharkContext(gameState: GameState) extends GameContext {
 
         Right("Thanks buddy!")
     })
-    val exitAction = Action.create("Exit", RegionContext(gameState))
+    val exitAction = Action.create("Leave", RegionContext(gameState))
 
     override def actions: Seq[Action] = List(payAction, exitAction)
 }
@@ -97,20 +101,24 @@ final case class FightContext(gameState: GameState) extends GameContext {
 
     override def actionPrompt: String = ???
 
-    val exitAction = Action.create("Exit", RegionContext(gameState))
+    val exitAction = Action.create("Run", RegionContext(gameState))
 
     override def actions: Seq[Action] = List(exitAction)
 }
 
 final case class StartContext(gameState: GameState) extends GameContext {
 
-    override def message: String = s"You owe a loan shark ${"$" + gameState.player.debt}. \n\nAnd you've got 20 days to repay it."
+    override def message: String = s"You owe a loan shark ${"$" + gameState.player.debt}.\nAnd you've got 20 days to repay it."
 
     override def actionPrompt: String = "Ready to start?"
 
     val beginAction = Action.create("Yes", RegionContext(gameState))
+    val exitAction = Action("No...", gameState => {
+        System.exit(0)
+        Right("")
+    })
 
-    override def actions: Seq[Action] = List(beginAction)
+    override def actions: Seq[Action] = List(beginAction, exitAction)
 }
 
 final case class MarketContext(gameState: GameState) extends GameContext {
@@ -136,6 +144,7 @@ final case class MarketContext(gameState: GameState) extends GameContext {
         currentState = Initial
         Right("")
     })
+    val exitAction = Action.create("Leave Market", RegionContext(gameState))
 
     override def actionPrompt: String = {
         currentState match {
@@ -147,7 +156,7 @@ final case class MarketContext(gameState: GameState) extends GameContext {
 
     override def actions: Seq[Action] = {
         currentState match {
-            case Initial => List(buyAction, sellAction)
+            case Initial => List(buyAction, sellAction, exitAction)
             case Buying => List(goBackAction)
             case Selling => List(goBackAction)
         }
