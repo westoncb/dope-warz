@@ -19,7 +19,7 @@ sealed trait GameContext {
 final case class RegionContext(gameState: GameState) extends GameContext {
     var regionName = gameState.region.name
 
-    override def message: String = s"Welcome to ${regionName + ": " + gameState.player}"
+    override def message: String = s"Welcome to ${regionName}"
 
     override def actionPrompt: String = "Where would you like to go, dude?"
 
@@ -38,15 +38,15 @@ final case class BankContext(gameState: GameState) extends GameContext {
 
     val depositAction: Action = Action("Deposit", gameState => {
 
-        gameState.player.money -= 5
-        gameState.player.bankMoney += 5
+//        gameState.player.money -= 5
+//        gameState.player.bankMoney += 5
         Right("Deposited successfully")
     })
 
     val withdrawAction: Action = Action("Deposit", gameState => {
 
-        gameState.player.bankMoney -= 5
-        gameState.player.money += 5
+//        gameState.player.bankMoney -= 5
+//        gameState.player.money += 5
         Right("Deposited successfully")
     })
 
@@ -81,8 +81,8 @@ final case class LoanSharkContext(gameState: GameState) extends GameContext {
     override def actionPrompt: String = "You gonna pay?"
 
     val payAction = Action("Pay", gameState => {
-        gameState.player.money -= 5
-        gameState.player.debt -= 5
+//        gameState.player.money -= 5
+//        gameState.player.debt -= 5
 
         Right("Thanks buddy!")
     })
@@ -100,4 +100,56 @@ final case class FightContext(gameState: GameState) extends GameContext {
     val exitAction = Action.create("Exit", RegionContext(gameState))
 
     override def actions: Seq[Action] = List(exitAction)
+}
+
+final case class StartContext(gameState: GameState) extends GameContext {
+
+    override def message: String = s"You owe a loan shark ${"$" + gameState.player.debt}. \n\nAnd you've got 20 days to repay it."
+
+    override def actionPrompt: String = "Ready to start?"
+
+    val beginAction = Action.create("Yes", RegionContext(gameState))
+
+    override def actions: Seq[Action] = List(beginAction)
+}
+
+final case class MarketContext(gameState: GameState) extends GameContext {
+
+    override def message: String = s"This looks like a good spot to do business."
+
+    sealed trait State
+    case object Initial extends State
+    case object Buying extends State
+    case object Selling extends State
+
+    var currentState: State = Initial
+
+    val buyAction = Action("Buy", gameState => {
+        currentState = Buying
+        Right("")
+    })
+    val sellAction = Action("Sell", gameState => {
+        currentState = Selling
+        Right("")
+    })
+    val goBackAction = Action("Go Back", gameState => {
+        currentState = Initial
+        Right("")
+    })
+
+    override def actionPrompt: String = {
+        currentState match {
+            case Initial => "Whatchya wanna do?"
+            case Buying => "Whatchya wanna buy?"
+            case Selling => "Whatchya wanna sell?"
+        }
+    }
+
+    override def actions: Seq[Action] = {
+        currentState match {
+            case Initial => List(buyAction, sellAction)
+            case Buying => List(goBackAction)
+            case Selling => List(goBackAction)
+        }
+    }
 }
