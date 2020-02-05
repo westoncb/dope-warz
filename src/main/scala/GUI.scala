@@ -9,7 +9,7 @@ case class GUI(game: Game, width: Int, height: Int) {
 
     def show: Unit = {
 
-        val frame = new JFrame()
+        val frame = new JFrame("Dope Warz")
         frame.setSize(width, height)
         frame.setLocationRelativeTo(null)
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
@@ -101,6 +101,10 @@ case class GUI(game: Game, width: Int, height: Int) {
         g.setFont(new Font("Helvetica", Font.PLAIN, 30))
         drawStringInCell(g, ">", actionsTable, cursorIndex, 0)
         g.setFont(new Font("Helvetica", Font.PLAIN, 18))
+
+        val status = s"Money: ${"$" + game.state.player.money}   |   Bank: ${"$" + game.state.player.bankMoney}   |   Debt: ${"$" + game.state.player.debt}   |   Date: ${game.state.date}"
+        val bounds = g.getFontMetrics.getStringBounds(status, g)
+        g.drawString(status, startX + width - bounds.getWidth.toInt - 10, startY + height - bounds.getHeight.toInt + 10)
     }
 
     def drawTable(g: Graphics, table: Table): Unit = {
