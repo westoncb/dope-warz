@@ -161,14 +161,17 @@ final case class MarketContext(gameState: GameState) extends GameContext {
     var currentState: State = Initial
 
     val buyAction = DefaultAction("Buy", gameState => {
+        gameState.lockCursor = true
         currentState = Buying
         Right("")
     })
     val sellAction = DefaultAction("Sell", gameState => {
+        gameState.lockCursor = true
         currentState = Selling
         Right("")
     })
     val goBackAction = DefaultAction("Go Back", gameState => {
+        gameState.lockCursor = false
         currentState = Initial
         Right("")
     })

@@ -33,13 +33,16 @@ case class GUI(game: Game, width: Int, height: Int) {
 
             override def keyPressed(e: KeyEvent): Unit = {
                 if (e.getKeyCode == KeyEvent.VK_UP)
-                    cursorIndex = Math.max(cursorIndex - 1, 0)
+                    cursorIndex = if (cursorIndex - 1 >= 0) cursorIndex - 1 else game.state.activeContext.actions.length-1
                 else if (e.getKeyCode == KeyEvent.VK_DOWN)
-                    cursorIndex = Math.min(cursorIndex + 1, game.state.activeContext.actions.length - 1)
+                    cursorIndex = (cursorIndex + 1) % game.state.activeContext.actions.length
                 else if (e.getKeyCode == KeyEvent.VK_ENTER) {
 
                     game.step(game.state.activeContext.actions(cursorIndex))
-                    cursorIndex = 0
+
+                    if (!game.state.lockCursor)
+                        cursorIndex = 0
+
                 } else if (e.getKeyCode == KeyEvent.VK_ESCAPE)
                     System.exit(0)
             }
@@ -91,6 +94,7 @@ case class GUI(game: Game, width: Int, height: Int) {
         val promptString = game.state.activeContext.actionPrompt
         val promptBounds = g.getFontMetrics.getStringBounds(promptString, g)
 
+        g.setFont(new Font("Helvetica", Font.PLAIN, 24))
         g.drawString(promptString, startX + 15, startY + height/2 + promptBounds.getHeight.toInt + 15)
 
         val actionsTable = Table(width/4, height/4, game.state.activeContext.actions.length, 2, startX, startY + height/2 + (height/4 - height/8))

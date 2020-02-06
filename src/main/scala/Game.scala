@@ -16,6 +16,7 @@ case class GameState(player: Player = Player()) {
     var turnsTaken = 0
     var region: Region = Manhattan
     var drugPrices: Map[Drug, Float] = Map()
+    var lockCursor = false
 
     def date: String = {
         val cal = new GregorianCalendar(1983, 11, 3 + turnsTaken)
