@@ -16,7 +16,7 @@ case class GameState(player: Player = Player()) {
     var turnsTaken = 0
     var region: Region = Manhattan
     var drugPrices: Map[Drug, Float] = Map()
-    var lockCursor = false
+    var lockCursor = false // a hack to not reset the cursor position on specific screens (e.g. buy/sell screens)
 
     def date: String = {
         val cal = new GregorianCalendar(1983, 11, 3 + turnsTaken)
