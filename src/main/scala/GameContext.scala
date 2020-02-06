@@ -34,9 +34,9 @@ final case class RegionContext(gameState: GameState) extends GameContext {
 
         List(
             DefaultAction.create("Market", MarketContext(gameState)),
+            DefaultAction.create("Travel", TravelContext(gameState)),
             DefaultAction.create("Bank", BankContext(gameState)),
             DefaultAction.create("Gun Store", StoreContext(gameState)),
-            DefaultAction.create("Travel", TravelContext(gameState)),
             DefaultAction.create("Loan Shark", LoanSharkContext(gameState))
         )
     }
@@ -151,7 +151,7 @@ final case class InitialContext(gameState: GameState) extends GameContext {
 
 final case class MarketContext(gameState: GameState) extends GameContext {
 
-    override def message: String = s"This looks like a good spot to do business."
+    override def message: String = s"It's time to make some money."
 
     sealed trait State
     case object Initial extends State
