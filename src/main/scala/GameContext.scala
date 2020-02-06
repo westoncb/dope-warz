@@ -49,12 +49,12 @@ final case class BankContext(gameState: GameState) extends GameContext {
 
     val depositAction: DefaultAction = DefaultAction("Deposit", gameState => {
 
-        Right("Deposited successfully")
+        Right("Deposited successfully (this is a placeholder)")
     })
 
     val withdrawAction: DefaultAction = DefaultAction("Withdraw", gameState => {
 
-        Right("Withdrew successfully")
+        Right("Withdrew successfully (this is a placeholder)")
     })
 
     val exitAction = DefaultAction.create("Leave", RegionContext(gameState))
@@ -136,7 +136,7 @@ final case class FightContext(gameState: GameState) extends GameContext {
 
 final case class InitialContext(gameState: GameState) extends GameContext {
 
-    override def message: String = s"You owe a loan shark ${"$" + gameState.player.debt}.\nAnd you've got 20 days to repay it."
+    override def message: String = s"You owe a loan shark ${"$" + gameState.player.debt}.\nAnd you've got ${gameState.turnsAllowed} days to repay it."
 
     override def actionPrompt: String = "Ready to start?"
 

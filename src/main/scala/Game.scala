@@ -12,8 +12,9 @@ case class Player(maxHealth: Int = 100) {
     var drugs: LinkedHashMap[Drug, Int] = LinkedHashMap(Speed -> 0, Acid -> 0, Ludes -> 0, Cocaine -> 0, Heroin -> 0)
 }
 
-case class GameState(player: Player = Player()) {
+case class GameState(player: Player = Player(), turnsAllowed: Int = 14) {
     var turnsTaken = 0
+    def turnsRemaining = turnsAllowed - turnsTaken
     var region: Region = Manhattan
     var drugPrices: Map[Drug, Float] = Map()
     var lockCursor = false // a hack to not reset the cursor position on specific screens (e.g. buy/sell screens)
@@ -48,6 +49,11 @@ case class Game(state: GameState = GameState()) {
     def changeRegion(newRegion: Region): Unit = {
         state.region = newRegion
         state.turnsTaken += 1
+
+        if (state.turnsRemaining == 0 && state.player.debt > 0) {
+            JOptionPane.showMessageDialog(null, "You remembered too late you were supposed to pay before today.\nYou'll make an attempt to leave New York in a hurry—but it's no use.")
+            System.exit(0)
+        }
 
         state.drugPrices = generateDrugPrices(state.region)
     }
