@@ -27,9 +27,7 @@ final case class RegionContext(gameState: GameState) extends GameContext {
     var region = gameState.region
 
     override def message: String = s"Welcome to ${region.name}"
-
     override def actionPrompt: String = "Where would you like to go, dude?"
-
     override def actions: Seq[DefaultAction] = {
 
         List(
@@ -44,16 +42,13 @@ final case class RegionContext(gameState: GameState) extends GameContext {
 
 final case class BankContext(gameState: GameState) extends GameContext {
     override def message: String = "Welcome to the bank, dude."
-
     override def actionPrompt: String = "What would you like to do?"
 
     val depositAction: DefaultAction = DefaultAction("Deposit", gameState => {
-
         Right("Deposited successfully (this is a placeholder)")
     })
 
     val withdrawAction: DefaultAction = DefaultAction("Withdraw", gameState => {
-
         Right("Withdrew successfully (this is a placeholder)")
     })
 
@@ -64,11 +59,8 @@ final case class BankContext(gameState: GameState) extends GameContext {
 
 final case class StoreContext(gameState: GameState) extends GameContext {
     override def message: String = "Welcome to the store, bro."
-
     override def actionPrompt: String = "What would you like to buy?"
-
     val exitAction = DefaultAction.create("Leave", RegionContext(gameState))
-
     override def actions: Seq[DefaultAction] = List(exitAction)
 }
 
@@ -126,18 +118,14 @@ final case class LoanSharkContext(gameState: GameState) extends GameContext {
 final case class FightContext(gameState: GameState) extends GameContext {
 
     override def message: String = ???
-
     override def actionPrompt: String = ???
-
     val exitAction = DefaultAction.create("Run", RegionContext(gameState))
-
     override def actions: Seq[Action] = List(exitAction)
 }
 
 final case class InitialContext(gameState: GameState) extends GameContext {
 
     override def message: String = s"You owe a loan shark ${"$" + gameState.player.debt}.\nAnd you've got ${gameState.turnsAllowed} days to repay it."
-
     override def actionPrompt: String = "Ready to start?"
 
     val beginAction = RegionChangeAction("Yes", gameState => Left(RegionContext(gameState)), Manhattan)
