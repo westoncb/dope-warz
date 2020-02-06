@@ -11,29 +11,51 @@ case class Player(maxHealth: Int = 100, money: Int = 2000, bankMoney: Int = 0, d
 case class GameState(player: Player = Player()) {
     var turnsTaken = 0
     var region: Region = Manhattan
+    var drugPrices: Map[Drug, Float] = Map()
+
     def date: String = {
         val cal = new GregorianCalendar(1983, 11, 3 + turnsTaken)
         val fmt = new SimpleDateFormat("dd-MMM-yyyy")
         fmt.setCalendar(cal)
         fmt.format(cal.getTime)
     }
-    var activeContext: GameContext = InitialContext(this)
 
-    def changeRegion(newRegion: Region): Unit = {
-        region = newRegion
-        turnsTaken += 1
-    }
+    var activeContext: GameContext = InitialContext(this)
 }
 
 case class Game(state: GameState = GameState()) {
-    val contextMap = Map()
-    val regionMap = Map()
 
     def step(action: Action): Unit = {
         action.execute(state) match {
-            case Left(context) => state.activeContext = context
+            case Left(context) => {
+                state.activeContext = context
+            }
             case Right("") =>
             case Right(message) => JOptionPane.showMessageDialog(null, message)
         }
+
+        action match {
+            case RegionChangeAction(n, e, region) => changeRegion(region)
+            case _ =>
+        }
     }
+
+    def changeRegion(newRegion: Region): Unit = {
+        state.region = newRegion
+        state.turnsTaken += 1
+
+        state.drugPrices = generateDrugPrices(state.region)
+    }
+
+    def generateDrugPrices(region: Region): Map[Drug, Float] = {
+        Map(
+            Speed -> generatePrice(10, 100, region.drugPriceBiases(Speed)),
+            Acid -> generatePrice(50, 300, region.drugPriceBiases(Acid)),
+            Ludes -> generatePrice(2, 50, region.drugPriceBiases(Ludes)),
+            Cocaine -> generatePrice(100, 600, region.drugPriceBiases(Cocaine)),
+            Heroin -> generatePrice(20, 200, region.drugPriceBiases(Heroin)),
+        )
+    }
+
+    def generatePrice(min: Int, max: Int, bias: Float): Int = (Math.random() * bias * (max - min) + min).toInt
 }

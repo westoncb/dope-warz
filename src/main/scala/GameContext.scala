@@ -1,14 +1,21 @@
-case class Action(name: String, execute: GameState => Either[GameContext, String])
+sealed trait Action {
+    def name: String
+    def execute: GameState => Either[GameContext, String]
+}
 
-case object Action {
-    def create(name: String, gameContext: GameContext): Action = {
-        Action(name, gameState => Left(gameContext))
+case class DefaultAction(name: String, execute: GameState => Either[GameContext, String]) extends Action
+
+case object DefaultAction {
+    def create(name: String, gameContext: GameContext): DefaultAction = {
+        DefaultAction(name, gameState => Left(gameContext))
     }
 
-    def create(name: String, message: String): Action = {
-        Action(name, gameState => Right(message))
+    def create(name: String, message: String): DefaultAction = {
+        DefaultAction(name, gameState => Right(message))
     }
 }
+
+case class RegionChangeAction(name: String, execute: GameState => Either[GameContext, String], nextRegion: Region) extends Action
 
 sealed trait GameContext {
     def message: String
@@ -19,30 +26,18 @@ sealed trait GameContext {
 final case class RegionContext(gameState: GameState) extends GameContext {
     var region = gameState.region
 
-    def drugPrices(region: Region): Map[Drug, Float] = {
-        Map(
-            Speed -> generatePrice(10, 100, region.drugPriceBiases(Speed)),
-            Acid -> generatePrice(50, 300, region.drugPriceBiases(Acid)),
-            Ludes -> generatePrice(2, 50, region.drugPriceBiases(Ludes)),
-            Cocaine -> generatePrice(100, 600, region.drugPriceBiases(Cocaine)),
-            Heroin -> generatePrice(20, 200, region.drugPriceBiases(Heroin)),
-        )
-    }
-
-    def generatePrice(min: Int, max: Int, bias: Float): Int = (Math.random() * bias * (max - min) + min).toInt
-
     override def message: String = s"Welcome to ${region.name}"
 
     override def actionPrompt: String = "Where would you like to go, dude?"
 
-    override def actions: Seq[Action] = {
+    override def actions: Seq[DefaultAction] = {
 
         List(
-            Action.create("Market", MarketContext(gameState)),
-            Action.create("Bank", BankContext(gameState)),
-            Action.create("Gun Store", StoreContext(gameState)),
-            Action.create("Travel", TravelContext(gameState)),
-            Action.create("Loan Shark", LoanSharkContext(gameState))
+            DefaultAction.create("Market", MarketContext(gameState)),
+            DefaultAction.create("Bank", BankContext(gameState)),
+            DefaultAction.create("Gun Store", StoreContext(gameState)),
+            DefaultAction.create("Travel", TravelContext(gameState)),
+            DefaultAction.create("Loan Shark", LoanSharkContext(gameState))
         )
     }
 }
@@ -52,23 +47,23 @@ final case class BankContext(gameState: GameState) extends GameContext {
 
     override def actionPrompt: String = "What would you like to do?"
 
-    val depositAction: Action = Action("Deposit", gameState => {
+    val depositAction: DefaultAction = DefaultAction("Deposit", gameState => {
 
 //        gameState.player.money -= 5
 //        gameState.player.bankMoney += 5
         Right("Deposited successfully")
     })
 
-    val withdrawAction: Action = Action("Withdraw", gameState => {
+    val withdrawAction: DefaultAction = DefaultAction("Withdraw", gameState => {
 
 //        gameState.player.bankMoney -= 5
 //        gameState.player.money += 5
         Right("Deposited successfully")
     })
 
-    val exitAction = Action.create("Leave", RegionContext(gameState))
+    val exitAction = DefaultAction.create("Leave", RegionContext(gameState))
 
-    override def actions: Seq[Action] = List(depositAction, withdrawAction, exitAction)
+    override def actions: Seq[DefaultAction] = List(depositAction, withdrawAction, exitAction)
 }
 
 final case class StoreContext(gameState: GameState) extends GameContext {
@@ -76,9 +71,9 @@ final case class StoreContext(gameState: GameState) extends GameContext {
 
     override def actionPrompt: String = "What would you like to buy?"
 
-    val exitAction = Action.create("Leave", RegionContext(gameState))
+    val exitAction = DefaultAction.create("Leave", RegionContext(gameState))
 
-    override def actions: Seq[Action] = List(exitAction)
+    override def actions: Seq[DefaultAction] = List(exitAction)
 }
 
 final case class TravelContext(gameState: GameState) extends GameContext {
@@ -87,31 +82,25 @@ final case class TravelContext(gameState: GameState) extends GameContext {
     override def actionPrompt: String = "Where to next?"
 
     val actionList = List(
-        Action("The Bronx", gameState => {
-            gameState changeRegion TheBronx
+        RegionChangeAction("The Bronx", gameState => {
             Left(RegionContext(gameState))
-        }),
-        Action("The Ghetto", gameState => {
-            gameState changeRegion TheGhetto
+        }, TheBronx),
+        RegionChangeAction("The Ghetto", gameState => {
             Left(RegionContext(gameState))
-        }),
-        Action("Central Park", gameState => {
-            gameState changeRegion CentralPark
+        }, TheGhetto),
+        RegionChangeAction("Central Park", gameState => {
             Left(RegionContext(gameState))
-        }),
-        Action("Manhattan", gameState => {
-            gameState changeRegion Manhattan
+        }, CentralPark),
+        RegionChangeAction("Manhattan", gameState => {
             Left(RegionContext(gameState))
-        }),
-        Action("Coney Island", gameState => {
-            gameState changeRegion ConeyIsland
+        }, Manhattan),
+        RegionChangeAction("Coney Island", gameState => {
             Left(RegionContext(gameState))
-        }),
-        Action("Brooklyn", gameState => {
-            gameState changeRegion Brooklyn
+        }, ConeyIsland),
+        RegionChangeAction("Brooklyn", gameState => {
             Left(RegionContext(gameState))
-        }),
-        Action.create("Go Back", RegionContext(gameState))
+        }, Brooklyn),
+        DefaultAction.create("Go Back", RegionContext(gameState))
     )
 
     override def actions: Seq[Action] = actionList.filter(action => !action.name.eq(gameState.region.name))
@@ -122,13 +111,13 @@ final case class LoanSharkContext(gameState: GameState) extends GameContext {
 
     override def actionPrompt: String = "You gonna pay?"
 
-    val payAction = Action("Pay", gameState => {
+    val payAction = DefaultAction("Pay", gameState => {
 //        gameState.player.money -= 5
 //        gameState.player.debt -= 5
 
         Right("Thanks buddy!")
     })
-    val exitAction = Action.create("Leave", RegionContext(gameState))
+    val exitAction = DefaultAction.create("Leave", RegionContext(gameState))
 
     override def actions: Seq[Action] = List(payAction, exitAction)
 }
@@ -139,7 +128,7 @@ final case class FightContext(gameState: GameState) extends GameContext {
 
     override def actionPrompt: String = ???
 
-    val exitAction = Action.create("Run", RegionContext(gameState))
+    val exitAction = DefaultAction.create("Run", RegionContext(gameState))
 
     override def actions: Seq[Action] = List(exitAction)
 }
@@ -150,8 +139,8 @@ final case class InitialContext(gameState: GameState) extends GameContext {
 
     override def actionPrompt: String = "Ready to start?"
 
-    val beginAction = Action.create("Yes", RegionContext(gameState))
-    val exitAction = Action("No...", gameState => {
+    val beginAction = RegionChangeAction("Yes", gameState => Left(RegionContext(gameState)), Manhattan)
+    val exitAction = DefaultAction("No...", gameState => {
         System.exit(0)
         Right("")
     })
@@ -170,19 +159,19 @@ final case class MarketContext(gameState: GameState) extends GameContext {
 
     var currentState: State = Initial
 
-    val buyAction = Action("Buy", gameState => {
+    val buyAction = DefaultAction("Buy", gameState => {
         currentState = Buying
         Right("")
     })
-    val sellAction = Action("Sell", gameState => {
+    val sellAction = DefaultAction("Sell", gameState => {
         currentState = Selling
         Right("")
     })
-    val goBackAction = Action("Go Back", gameState => {
+    val goBackAction = DefaultAction("Go Back", gameState => {
         currentState = Initial
         Right("")
     })
-    val exitAction = Action.create("Leave", RegionContext(gameState))
+    val exitAction = DefaultAction.create("Leave", RegionContext(gameState))
 
     override def actionPrompt: String = {
         currentState match {
