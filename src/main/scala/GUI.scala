@@ -66,8 +66,8 @@ case class GUI(game: Game, width: Int, height: Int) {
     }
 
     case class Table(width: Int, height: Int, rows: Int, cols: Int, x: Int, y: Int) {
-        def colWidth = width / cols
-        def rowHeight = height / rows
+        def colWidth = Math.ceil(width.toFloat / cols).toInt
+        def rowHeight = Math.ceil(height.toFloat / rows).toInt
     }
 
     def drawGame(g: Graphics, state: GameState, startX: Int, startY: Int, width: Int, height: Int): Unit = {
@@ -102,6 +102,24 @@ case class GUI(game: Game, width: Int, height: Int) {
         drawStringInCell(g, ">", actionsTable, cursorIndex, 0)
         g.setFont(new Font("Helvetica", Font.PLAIN, 18))
 
+        game.state.activeContext match {
+            case MarketContext(gameState) => {
+                val tableWidth = width / 4
+                val tableHeight = height / 4
+                val marketTable = Table(tableWidth, tableHeight, 5, 2, startX + width/2 + width/4 - tableWidth/2, startY + height/2 + height/4 - tableHeight/2)
+                drawTable(g, marketTable)
+
+                var index = 0
+                for ((k,v) <- gameState.drugPrices) {
+                    drawStringInCell(g, ""+k, marketTable, index, 0)
+                    drawStringInCell(g, "$"+v, marketTable, index, 1)
+
+                    index += 1
+                }
+            }
+            case _ =>
+        }
+
         val status = s"Money: ${"$" + game.state.player.money}   |   Bank: ${"$" + game.state.player.bankMoney}   |   Debt: ${"$" + game.state.player.debt}   |   Date: ${game.state.date}"
         val bounds = g.getFontMetrics.getStringBounds(status, g)
         g.drawString(status, startX + width - bounds.getWidth.toInt - 10, startY + height - bounds.getHeight.toInt + 10)
@@ -110,10 +128,10 @@ case class GUI(game: Game, width: Int, height: Int) {
     def drawTable(g: Graphics, table: Table): Unit = {
 
 
-        for (i <- 1 to table.cols) {
+        for (i <- 0 to table.cols) {
             g.drawLine(table.x + i * table.colWidth, table.y, table.x + i * table.colWidth, table.y + table.height)
         }
-        for (i <- 1 to table.rows) {
+        for (i <- 0 to table.rows) {
             g.drawLine(table.x, table.y + i * table.rowHeight, table.x + table.width, table.y + i * table.rowHeight)
         }
     }
