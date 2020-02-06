@@ -1,6 +1,6 @@
-import java.util.{Date, GregorianCalendar}
+import java.util.{GregorianCalendar}
 import java.text.SimpleDateFormat
-import scala.collection.mutable.Map
+import scala.collection.mutable.LinkedHashMap
 
 import javax.swing.JOptionPane
 
@@ -9,7 +9,7 @@ case class Player(maxHealth: Int = 100) {
     var money: Int = 2000
     var bankMoney: Int = 0
     var debt: Int = 10000
-    var drugs: Map[Drug, Int] = Map(Speed -> 0, Acid -> 0, Ludes -> 0, Cocaine -> 0, Heroin -> 0)
+    var drugs: LinkedHashMap[Drug, Int] = LinkedHashMap(Speed -> 0, Acid -> 0, Ludes -> 0, Cocaine -> 0, Heroin -> 0)
 }
 
 case class GameState(player: Player = Player()) {
@@ -30,17 +30,17 @@ case class GameState(player: Player = Player()) {
 case class Game(state: GameState = GameState()) {
 
     def step(action: Action): Unit = {
+        action match {
+            case RegionChangeAction(n, e, region) => changeRegion(region)
+            case _ =>
+        }
+
         action.execute(state) match {
             case Left(context) => {
                 state.activeContext = context
             }
             case Right("") =>
             case Right(message) => JOptionPane.showMessageDialog(null, message)
-        }
-
-        action match {
-            case RegionChangeAction(n, e, region) => changeRegion(region)
-            case _ =>
         }
     }
 
