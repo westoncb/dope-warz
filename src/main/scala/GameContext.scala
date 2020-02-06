@@ -49,16 +49,12 @@ final case class BankContext(gameState: GameState) extends GameContext {
 
     val depositAction: DefaultAction = DefaultAction("Deposit", gameState => {
 
-//        gameState.player.money -= 5
-//        gameState.player.bankMoney += 5
         Right("Deposited successfully")
     })
 
     val withdrawAction: DefaultAction = DefaultAction("Withdraw", gameState => {
 
-//        gameState.player.bankMoney -= 5
-//        gameState.player.money += 5
-        Right("Deposited successfully")
+        Right("Withdrew successfully")
     })
 
     val exitAction = DefaultAction.create("Leave", RegionContext(gameState))
@@ -107,15 +103,20 @@ final case class TravelContext(gameState: GameState) extends GameContext {
 }
 
 final case class LoanSharkContext(gameState: GameState) extends GameContext {
-    override def message: String = "You'd better have my money, bro."
+    override def message: String = s"You'd better have my money, bro.\nYou still owe me ${"$" + gameState.player.debt}."
 
     override def actionPrompt: String = "You gonna pay?"
 
     val payAction = DefaultAction("Pay", gameState => {
-//        gameState.player.money -= 5
-//        gameState.player.debt -= 5
 
-        Right("Thanks buddy!")
+        if (gameState.player.money >= gameState.player.debt) {
+            gameState.player.money -= gameState.player.debt
+            gameState.player.debt = 0
+            Right("Thanks buddy!")
+        } else {
+            Right("You tryin' to screw me!?")
+        }
+
     })
     val exitAction = DefaultAction.create("Leave", RegionContext(gameState))
 
@@ -181,11 +182,45 @@ final case class MarketContext(gameState: GameState) extends GameContext {
         }
     }
 
+    val prices = gameState.drugPrices
+
+    val buy = (drug: Drug) => {
+        var success = true
+
+        if (gameState.player.money >= prices(drug)) {
+            gameState.player.money -= prices(drug).toInt
+            gameState.player.drugs(drug) = gameState.player.drugs(drug) + 1
+        } else
+            success = false
+
+        success
+    }
+
+    val sell = (drug: Drug) => {
+        var success = true
+
+        if (gameState.player.drugs(drug) > 0) {
+            gameState.player.drugs(drug) = gameState.player.drugs(drug) - 1
+            gameState.player.money += gameState.drugPrices(drug).toInt
+        } else
+            success = false
+
+        success
+    }
+
+    val buyActions = gameState.drugPrices.keys.map(drug => DefaultAction(drug.toString, gameState => {
+        if (buy(drug)) Right("") else Right("You're broke punk—get outta here!")
+    }))
+
+    val sellActions = gameState.drugPrices.keys.map(drug => DefaultAction(drug.toString, gameState => {
+        if (sell(drug)) Right("") else Right(s"You've got no more ${drug} to sell!")
+    }))
+
     override def actions: Seq[Action] = {
         currentState match {
             case Initial => List(buyAction, sellAction, exitAction)
-            case Buying => List(goBackAction)
-            case Selling => List(goBackAction)
+            case Buying => List() ++ buyActions ++ List(goBackAction)
+            case Selling => List() ++ sellActions ++ List(goBackAction)
         }
     }
 }
