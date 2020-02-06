@@ -1,11 +1,15 @@
 import java.util.{Date, GregorianCalendar}
 import java.text.SimpleDateFormat
+import scala.collection.mutable.Map
 
 import javax.swing.JOptionPane
 
-case class Player(maxHealth: Int = 100, money: Int = 2000, bankMoney: Int = 0, debt: Int = 10000) {
+case class Player(maxHealth: Int = 100) {
     var health = maxHealth
-    val drugs = Map(Speed -> 0, Acid -> 0, Ludes -> 0, Cocaine -> 0, Heroin -> 0)
+    var money: Int = 2000
+    var bankMoney: Int = 0
+    var debt: Int = 10000
+    var drugs: Map[Drug, Int] = Map(Speed -> 0, Acid -> 0, Ludes -> 0, Cocaine -> 0, Heroin -> 0)
 }
 
 case class GameState(player: Player = Player()) {
