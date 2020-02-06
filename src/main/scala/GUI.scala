@@ -1,6 +1,6 @@
-import java.awt.{Color, Dimension, Font, Graphics, Graphics2D, Rectangle}
+import java.awt.{Color, Dimension, Font, Graphics, Rectangle}
 
-import javax.swing.{JFrame, JOptionPane, JPanel, JSplitPane, WindowConstants}
+import javax.swing.{JFrame, JPanel, WindowConstants}
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 
@@ -43,8 +43,17 @@ case class GUI(game: Game, width: Int, height: Int) {
                     if (!game.state.lockCursor)
                         cursorIndex = 0
 
-                } else if (e.getKeyCode == KeyEvent.VK_ESCAPE)
-                    System.exit(0)
+                } else if (e.getKeyCode == KeyEvent.VK_ESCAPE) {
+
+                    game.state.activeContext.actions.find(action => {
+                        action.name.toLowerCase().equals("leave") ||
+                            action.name.toLowerCase().equals("go back") ||
+                            action.name.toLowerCase().equals("exit")
+                    }) match {
+                        case Some(action) => game.step(action)
+                        case None =>
+                    }
+                }
             }
         })
 
@@ -124,9 +133,16 @@ case class GUI(game: Game, width: Int, height: Int) {
             case _ =>
         }
 
-        val status = s"Money: ${"$" + game.state.player.money}   |   Bank: ${"$" + game.state.player.bankMoney}   |   Debt: ${"$" + game.state.player.debt}   |   Date: ${game.state.date}"
+        var status = s"Money: ${"$" + game.state.player.money}   |   Bank: ${"$" + game.state.player.bankMoney}   |   Debt: ${"$" + game.state.player.debt}   |   Date: ${game.state.date}"
+
+        if (game.state.player.debt > 0) {
+            status += s" (${game.state.turnsRemaining} days left)"
+        }
+
         val bounds = g.getFontMetrics.getStringBounds(status, g)
         g.drawString(status, startX + width - bounds.getWidth.toInt - 10, startY + height - bounds.getHeight.toInt + 10)
+
+        g.drawString(game.state.region.name, startX + 10, startY + height - bounds.getHeight.toInt + 10)
     }
 
     def drawTable(g: Graphics, table: Table): Unit = {
